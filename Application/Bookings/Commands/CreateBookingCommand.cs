@@ -1,0 +1,46 @@
+﻿using Application.Common.Interfaces;
+using Domain.Entities;
+using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.Bookings.Commands
+{
+    public class CreateBookingCommand : IRequest<Guid>
+    {
+        public Guid ApartmentId { get; set; }
+        public Guid UserId { get; set; }
+        public DateTime CheckIn { get; set; }
+        public DateTime CheckOut { get; set; }
+        public decimal TotalPrice { get; set; }
+        public class CreateBookingHandler : IRequestHandler<CreateBookingCommand, Guid>
+        {
+            private readonly IBookingRepository _repo;
+
+            public CreateBookingHandler(IBookingRepository repo)
+            {
+                _repo = repo;
+            }
+
+            public async Task<Guid> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
+            {
+                var booking = new Booking
+                {
+                    Id = Guid.NewGuid(),
+                    ApartmentId = request.ApartmentId,
+                    UserId = request.UserId,
+                    CheckIn = request.CheckIn,
+                    CheckOut = request.CheckOut,
+                    TotalPrice = request.TotalPrice,
+                    Status = Domain.Enums.BookingStatus.Pending
+                };
+
+                await _repo.AddAsync(booking);
+                return booking.Id;
+            }
+        }
+    }
+}

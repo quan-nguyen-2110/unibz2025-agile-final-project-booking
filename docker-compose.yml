@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  api:
+    container_name: booking_api
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Server=db;Database=ApartmentDb;User=sa;Password=Yourpassword123!;TrustServerCertificate=True;
+  #   depends_on:
+  #     - db
+
+  # db:
+  #   container_name: apartment_sql
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
+  #   environment:
+  #     - ACCEPT_EULA=Y
+  #     - MSSQL_SA_PASSWORD=Yourpassword123!
+  #   ports:
+  #     - "1433:1433"
+  #   volumes:
+  #     - sql_data:/var/opt/mssql
+
+volumes:
+  sql_data:
