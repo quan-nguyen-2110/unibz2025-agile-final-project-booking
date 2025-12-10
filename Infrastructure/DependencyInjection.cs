@@ -16,6 +16,7 @@ namespace Infrastructure
                 options.UseSqlServer(config.GetConnectionString("Default")));
 
             services.AddScoped<IBookingRepository, BookingRepository>();
+            services.AddScoped<IApartmentCacheRepository, ApartmentCacheRepository>();
 
             services.AddHostedService<RabbitMqConsumer>();
 

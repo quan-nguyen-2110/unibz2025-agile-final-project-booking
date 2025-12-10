@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Apartments
+    public class ApartmentCache
     {
         [Key]
         public Guid Id { get; set; }

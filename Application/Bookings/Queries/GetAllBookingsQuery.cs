@@ -24,9 +24,9 @@ namespace Application.Bookings.Queries
                 {
                     Id = booking.Id,
                     ApartmentId = booking.ApartmentId,
-                    ApartmentTitle = booking.Apartment?.Title,
-                    ApartmentImage = booking.Apartment?.Base64Image,
-                    ApartmentAddress = booking.Apartment?.Address,
+                    ApartmentTitle = booking.Apartment?.Title ?? "",
+                    ApartmentImage = booking.Apartment?.Base64Image ?? "",
+                    ApartmentAddress = booking.Apartment?.Address ?? "",
                     ApartmentPrice = booking.Apartment?.Price ?? 0,
                     UserId = booking.UserId,
                     CheckIn = booking.CheckIn,
