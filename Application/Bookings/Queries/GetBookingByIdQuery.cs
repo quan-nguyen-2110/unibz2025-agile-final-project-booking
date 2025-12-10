@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Interfaces.IRepository;
 using Domain.Entities;
 using MediatR;
 using System;

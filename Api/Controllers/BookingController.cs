@@ -32,8 +32,8 @@ namespace BookingService.Controllers
             return Ok(new { id });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, UpdateBookingCommand command)
+        [HttpPost("{id}/reschedule")]
+        public async Task<IActionResult> Update(Guid id, RescheduleBookingCommand command)
         {
             command.Id = id;
             return Ok(await _mediator.Send(command));
@@ -43,6 +43,12 @@ namespace BookingService.Controllers
         public async Task<IActionResult> Cancel(Guid id)
         {
             return Ok(await _mediator.Send(new CancelBookingCommand { Id = id }));
+        }
+
+        [HttpPost("{id}/confirm")]
+        public async Task<IActionResult> Confirm(Guid id)
+        {
+            return Ok(await _mediator.Send(new ConfirmBookingCommand { Id = id }));
         }
 
         [HttpGet("{id}")]

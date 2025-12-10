@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Interfaces.IRepository;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Persistence;
@@ -28,7 +28,7 @@ namespace Infrastructure.Repositories
         }
 
         public Task<List<Booking>> GetAllAsync()
-            => _db.Bookings.ToListAsync();
+            => _db.Bookings.Include(x => x.Apartment).ToListAsync();
 
         public async Task<Booking?> GetByIdAsync(Guid id, CancellationToken ct = default)
             => await _db.Bookings.FindAsync(new object[] { id }, ct);

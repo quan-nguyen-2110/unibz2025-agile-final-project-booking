@@ -26,6 +26,8 @@ namespace Domain.Entities
         [Required]
         public DateTime CheckOut { get; set; }
 
+        public int Guests { get; set; } = 1;
+
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
 
@@ -36,5 +38,14 @@ namespace Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }
+
+        public string? CancelReason { get; set; }
+
+        public virtual Apartments? Apartment { get; set; }
+
+        public int CalculateNights()
+        {
+            return (this.CheckOut - this.CheckIn).Days;
+        }
     }
 }

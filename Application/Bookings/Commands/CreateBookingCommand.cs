@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Interfaces.IRepository;
 using Domain.Entities;
 using MediatR;
 using System;
@@ -16,6 +16,7 @@ namespace Application.Bookings.Commands
         public DateTime CheckIn { get; set; }
         public DateTime CheckOut { get; set; }
         public decimal TotalPrice { get; set; }
+        public int Guests { get; set; }
         public class CreateBookingHandler : IRequestHandler<CreateBookingCommand, Guid>
         {
             private readonly IBookingRepository _repo;
@@ -35,7 +36,10 @@ namespace Application.Bookings.Commands
                     CheckIn = request.CheckIn,
                     CheckOut = request.CheckOut,
                     TotalPrice = request.TotalPrice,
-                    Status = Domain.Enums.BookingStatus.Pending
+                    Guests = request.Guests,
+                    Status = Domain.Enums.BookingStatus.Pending,
+
+                    CreatedAt = DateTime.Now
                 };
 
                 await _repo.AddAsync(booking);

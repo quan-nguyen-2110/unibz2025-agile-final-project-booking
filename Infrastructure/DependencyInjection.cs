@@ -1,14 +1,10 @@
-﻿using Application.Common.Interfaces;
+﻿using Application.Interfaces.IRepository;
+using Infrastructure.Messaging;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure
 {
@@ -20,6 +16,8 @@ namespace Infrastructure
                 options.UseSqlServer(config.GetConnectionString("Default")));
 
             services.AddScoped<IBookingRepository, BookingRepository>();
+
+            services.AddHostedService<RabbitMqConsumer>();
 
             return services;
         }

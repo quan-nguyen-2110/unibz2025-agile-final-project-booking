@@ -10,12 +10,21 @@ namespace Application.Bookings.Queries.DTOs
     {
         public Guid Id { get; set; }
         public Guid ApartmentId { get; set; }
+        public string ApartmentTitle { get; set; } = default!;
+        public string ApartmentImage { get; set; } = default!;
+        public string ApartmentAddress { get; set; } = default!;
+        public decimal ApartmentPrice { get; set; }
+
         public Guid UserId { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+
+        public DateTime CheckIn { get; set; }
+        public DateTime CheckOut { get; set; }
+        public int Guests { get; set; }
+        public int Nights { get; set; }
         public decimal TotalPrice { get; set; }
         public string Status { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public string? CancelReason { get; set; }
+
     }
 }
