@@ -27,9 +27,17 @@ namespace Application.Bookings.Commands
 
             public async Task<bool> Handle(RescheduleBookingCommand request, CancellationToken cancellationToken)
             {
+                // Prevent double-booking
                 var booking = await _repo.GetByIdAsync(request.Id);
                 if (booking == null)
                     throw new KeyNotFoundException("Booking not found");
+
+                var bookings = await _repo.GetByApartmentIdAsync(booking.ApartmentId);
+                if (bookings.Any(x => x.Id != request.Id && x.Status != Domain.Enums.BookingStatus.Cancelled &&
+                    request.CheckIn < x.CheckOut && x.CheckOut < request.CheckOut))
+                {
+                    throw new Exception("Double-booking");
+                }
 
                 booking.CheckIn = request.CheckIn;
                 booking.CheckOut = request.CheckOut;

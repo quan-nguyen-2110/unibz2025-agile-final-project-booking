@@ -28,6 +28,15 @@ namespace Application.Bookings.Commands
 
             public async Task<Guid> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
             {
+                // Prevent double-booking
+                var bookings = await _repo.GetByApartmentIdAsync(request.ApartmentId);
+                if (bookings.Any(x => x.Status != Domain.Enums.BookingStatus.Cancelled &&
+                    request.CheckIn < x.CheckOut && x.CheckOut < request.CheckOut))
+                {
+                    throw new Exception("Double-booking");
+                }
+
+                // Add new booking
                 var booking = new Booking
                 {
                     Id = Guid.NewGuid(),

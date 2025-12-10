@@ -51,10 +51,10 @@ namespace BookingService.Controllers
             return Ok(await _mediator.Send(new ConfirmBookingCommand { Id = id }));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("apartment/{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            return Ok(await _mediator.Send(new GetBookingByIdQuery { Id = id }));
+            return Ok(await _mediator.Send(new GetBookingsByApartmentIdQuery { Id = id }));
         }
 
         [HttpGet]
