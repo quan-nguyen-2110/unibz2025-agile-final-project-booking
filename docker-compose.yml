@@ -9,7 +9,7 @@ services:
     ports:
       - "8083:8080" # The Api image always listens on port 8080 inside the container
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production # docker will load appsettings.json -> appsettings.Production.json
       - ConnectionStrings__Default=Server=db;Database=BookingDb;User=sa;Password=Yourpassword123!;TrustServerCertificate=True;
     depends_on:
       - db
