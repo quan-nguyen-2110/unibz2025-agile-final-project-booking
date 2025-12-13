@@ -48,13 +48,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseDeveloperExceptionPage();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
     // Database.Migrate() will apply all pending migrations automatically when the app starts.
     // For development / staging environments only!
     // For production: prefer CI/CD migration step to have control and avoid accidental data loss.

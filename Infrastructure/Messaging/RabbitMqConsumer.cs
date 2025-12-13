@@ -20,7 +20,8 @@ namespace Infrastructure.Messaging
         private readonly string _bookingQueue;
 
         private readonly string _RKCreatedApt;
-        private readonly string _RKUpdateddApt;
+        private readonly string _RKUpdatedApt;
+        private readonly string _RKDeletedApt;
 
         private readonly IConfiguration _config;
 
@@ -32,7 +33,8 @@ namespace Infrastructure.Messaging
             _exchangeName = config["RabbitMQ:ExchangeName"] ?? "rent-hub";
             _bookingQueue = config["RabbitMQ:BookingQueueName"] ?? "booking-queue";
             _RKCreatedApt = config["RabbitMQ:RK:CreateApartment"] ?? "rk-create-apt";
-            _RKUpdateddApt = config["RabbitMQ:RK:UpdateApartment"] ?? "rk-update-apt";
+            _RKUpdatedApt = config["RabbitMQ:RK:UpdateApartment"] ?? "rk-update-apt";
+            _RKDeletedApt = config["RabbitMQ:RK:DeleteApartment"] ?? "rk-delete-apt";
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,7 +68,8 @@ namespace Infrastructure.Messaging
                             arguments: null
                         ).Wait();
                         _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKCreatedApt).Wait();
-                        _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKUpdateddApt).Wait();
+                        _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKUpdatedApt).Wait();
+                        _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKDeletedApt).Wait();
 
                         Console.WriteLine("Connected to RabbitMQ!");
                     }
@@ -88,12 +91,19 @@ namespace Infrastructure.Messaging
                             {
                                 using var scope = _scopeFactory.CreateScope();
                                 var _aptRepository = scope.ServiceProvider.GetRequiredService<IApartmentCacheRepository>();
-                                var isExisting = await _aptRepository.IsExistingAsync(apt.Id);
 
-                                if (!isExisting)
+                                if (routingKey == _RKCreatedApt)
                                     await _aptRepository.AddAsync(apt);
-                                else
-                                    await _aptRepository.UpdateAsync(apt);
+                                else if (routingKey == _RKUpdatedApt)
+                                {
+                                    var isExisting = await _aptRepository.IsExistingAsync(apt.Id);
+                                    if (isExisting)
+                                        await _aptRepository.UpdateAsync(apt);
+                                    else
+                                        await _aptRepository.AddAsync(apt);
+                                }
+                                else if (routingKey == _RKDeletedApt)
+                                    await _aptRepository.DeleteAsync(apt.Id);
                             }
                         }
                         catch (Exception ex)
