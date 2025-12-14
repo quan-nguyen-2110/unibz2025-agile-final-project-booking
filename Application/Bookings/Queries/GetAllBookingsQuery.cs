@@ -43,8 +43,9 @@ namespace Application.Bookings.Queries
 
                     // User
                     UserId = booking.UserId,
-                    UserName = "Quan",
-                    UserPhone = "0912345678",
+                    UserName = booking.User?.Name ?? "Unknown User",
+                    UserPhone = booking.User?.Phone ?? "Unknown Phone",
+                    UserEmail = booking.User?.Email ?? "Unknown Email",
                 }).ToList();
 
                 return bookingDtos;

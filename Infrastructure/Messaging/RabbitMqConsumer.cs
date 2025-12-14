@@ -23,6 +23,9 @@ namespace Infrastructure.Messaging
         private readonly string _RKUpdatedApt;
         private readonly string _RKDeletedApt;
 
+        private readonly string _RKRegisteredUser;
+        private readonly string _RKUpdatedUser;
+
         private readonly IConfiguration _config;
 
         public RabbitMqConsumer(IConfiguration config, IServiceScopeFactory scopeFactory)
@@ -32,9 +35,13 @@ namespace Infrastructure.Messaging
 
             _exchangeName = config["RabbitMQ:ExchangeName"] ?? "rent-hub";
             _bookingQueue = config["RabbitMQ:BookingQueueName"] ?? "booking-queue";
+
             _RKCreatedApt = config["RabbitMQ:RK:CreateApartment"] ?? "rk-create-apt";
             _RKUpdatedApt = config["RabbitMQ:RK:UpdateApartment"] ?? "rk-update-apt";
             _RKDeletedApt = config["RabbitMQ:RK:DeleteApartment"] ?? "rk-delete-apt";
+
+            _RKRegisteredUser = config["RabbitMQ:RK:RegisterUser"] ?? "rk-register-user";
+            _RKUpdatedUser = config["RabbitMQ:RK:UpdateUser"] ?? "rk-update-user";
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -67,9 +74,13 @@ namespace Infrastructure.Messaging
                             autoDelete: false,
                             arguments: null
                         ).Wait();
+                        // binding queue apartment events
                         _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKCreatedApt).Wait();
                         _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKUpdatedApt).Wait();
                         _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKDeletedApt).Wait();
+                        // binding queue user events
+                        _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKRegisteredUser).Wait();
+                        _channel.QueueBindAsync(_bookingQueue, _exchangeName, _RKUpdatedUser).Wait();
 
                         Console.WriteLine("Connected to RabbitMQ!");
                     }
@@ -84,26 +95,59 @@ namespace Infrastructure.Messaging
                         try
                         {
                             var routingKey = ea.RoutingKey;
-                            var aptJson = Encoding.UTF8.GetString(ea.Body.ToArray());
-                            var apt = JsonSerializer.Deserialize<ApartmentCache>(aptJson);
+                            var msgJson = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                            if (apt != null)
+                            // User events
+                            if (routingKey == _RKRegisteredUser || routingKey == _RKUpdatedUser)
                             {
-                                using var scope = _scopeFactory.CreateScope();
-                                var _aptRepository = scope.ServiceProvider.GetRequiredService<IApartmentCacheRepository>();
-
-                                if (routingKey == _RKCreatedApt)
-                                    await _aptRepository.AddAsync(apt);
-                                else if (routingKey == _RKUpdatedApt)
+                                // For now, just log the registered user event
+                                Console.WriteLine($"Received user registration event: {msgJson}");
+                                var user = JsonSerializer.Deserialize<UserCache>(msgJson, new JsonSerializerOptions
                                 {
-                                    var isExisting = await _aptRepository.IsExistingAsync(apt.Id);
-                                    if (isExisting)
-                                        await _aptRepository.UpdateAsync(apt);
-                                    else
-                                        await _aptRepository.AddAsync(apt);
+                                    PropertyNameCaseInsensitive = true
+                                });
+                                if (user != null)
+                                {
+                                    using var scope = _scopeFactory.CreateScope();
+                                    var _userRepository = scope.ServiceProvider.GetRequiredService<IUserCacheRepository>();
+
+                                    if (routingKey == _RKRegisteredUser)
+                                        await _userRepository.AddAsync(user);
+                                    else if (routingKey == _RKUpdatedUser)
+                                    {
+                                        var isExisting = await _userRepository.IsExistingAsync(user.Id);
+                                        if (isExisting)
+                                            await _userRepository.UpdateAsync(user);
+                                        else
+                                            await _userRepository.AddAsync(user);
+                                    }
                                 }
-                                else if (routingKey == _RKDeletedApt)
-                                    await _aptRepository.DeleteAsync(apt.Id);
+                            }
+                            // Apartment events
+                            else if (routingKey == _RKCreatedApt || routingKey == _RKUpdatedApt || routingKey == _RKDeletedApt)
+                            {
+                                var apt = JsonSerializer.Deserialize<ApartmentCache>(msgJson, new JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true
+                                });
+                                if (apt != null)
+                                {
+                                    using var scope = _scopeFactory.CreateScope();
+                                    var _aptRepository = scope.ServiceProvider.GetRequiredService<IApartmentCacheRepository>();
+
+                                    if (routingKey == _RKCreatedApt)
+                                        await _aptRepository.AddAsync(apt);
+                                    else if (routingKey == _RKUpdatedApt)
+                                    {
+                                        var isExisting = await _aptRepository.IsExistingAsync(apt.Id);
+                                        if (isExisting)
+                                            await _aptRepository.UpdateAsync(apt);
+                                        else
+                                            await _aptRepository.AddAsync(apt);
+                                    }
+                                    else if (routingKey == _RKDeletedApt)
+                                        await _aptRepository.DeleteAsync(apt.Id);
+                                }
                             }
                         }
                         catch (Exception ex)
