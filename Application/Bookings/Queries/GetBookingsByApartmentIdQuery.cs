@@ -1,5 +1,5 @@
 ﻿using Application.Bookings.Queries.DTOs;
-using Application.Interfaces.IRepository;
+using Domain.Interfaces.IRepository;
 using Domain.Entities;
 using MediatR;
 using System;

@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.IRepository;
+﻿using Domain.Interfaces.IRepository;
 using Domain.Enums;
 using MediatR;
 using System;
@@ -42,8 +42,7 @@ namespace Application.Bookings.Commands
                 booking.CheckIn = request.CheckIn;
                 booking.CheckOut = request.CheckOut;
                 booking.TotalPrice = request.TotalPrice;
-                booking.Status = BookingStatus.Pending;
-                booking.UpdatedAt = DateTime.Now;
+                booking.Reshedule();
 
                 await _repo.UpdateAsync(booking);
                 return true;

@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.IRepository;
+﻿using Domain.Interfaces.IRepository;
 using Domain.Enums;
 using MediatR;
 using System;
@@ -28,9 +28,7 @@ namespace Application.Bookings.Commands
                 if (booking == null)
                     throw new KeyNotFoundException("Booking not found");
 
-                booking.Status = BookingStatus.Cancelled;
-                booking.CancelReason = request.CancelReason?.Trim();
-                booking.UpdatedAt = DateTime.Now;
+                booking.Cancel(request.CancelReason?.Trim());
 
                 await _repo.UpdateAsync(booking);
 

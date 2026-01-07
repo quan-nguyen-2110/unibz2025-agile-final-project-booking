@@ -54,7 +54,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:8080") // frontend URL
+        policy.WithOrigins("*") // frontend URL
               .AllowAnyHeader()
               .AllowAnyMethod(); // GET, POST, PUT, DELETE
     });
@@ -70,13 +70,27 @@ app.UseDeveloperExceptionPage();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    // Database.Migrate() will apply all pending migrations automatically when the app starts.
-    // For development / staging environments only!
-    // For production: prefer CI/CD migration step to have control and avoid accidental data loss.
-    using (var scope = app.Services.CreateScope())
+    var retryCount = 0;
+    while (retryCount < 10)
     {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.Migrate();
+        try
+        {
+            Console.WriteLine($"Migrate DB: {retryCount}");
+            // Database.Migrate() will apply all pending migrations automatically when the app starts.
+            // For development / staging environments only!
+            // For production: prefer CI/CD migration step to have control and avoid accidental data loss.
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
+            break;
+        }
+        catch
+        {
+            retryCount++;
+            Thread.Sleep(3000);
+        }
     }
 }
 

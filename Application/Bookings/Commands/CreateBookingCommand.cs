@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.IRepository;
+﻿using Domain.Interfaces.IRepository;
 using Domain.Entities;
 using MediatR;
 using System;
@@ -46,7 +46,6 @@ namespace Application.Bookings.Commands
                     CheckOut = request.CheckOut,
                     TotalPrice = request.TotalPrice,
                     Guests = request.Guests,
-                    Status = Domain.Enums.BookingStatus.Pending,
 
                     CreatedAt = DateTime.Now
                 };

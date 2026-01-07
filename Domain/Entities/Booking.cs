@@ -32,7 +32,7 @@ namespace Domain.Entities
         public decimal TotalPrice { get; set; }
 
         [Required]
-        public BookingStatus Status { get; set; } = BookingStatus.Pending;
+        public BookingStatus Status { get; private set; } = BookingStatus.Pending;
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -47,6 +47,31 @@ namespace Domain.Entities
         public int CalculateNights()
         {
             return (this.CheckOut - this.CheckIn).Days;
+        }
+
+        public void Confirm()
+        {
+            if (this.Status == BookingStatus.Cancelled)
+                throw new InvalidOperationException("Cannot confirm a cancelled booking.");
+            this.Status = BookingStatus.Confirmed;
+            this.UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Cancel(string? cancelReason)
+        {
+            if (this.Status == BookingStatus.Cancelled)
+                throw new InvalidOperationException("This booking has been already cancelled");
+            this.Status = BookingStatus.Confirmed;
+            this.UpdatedAt = DateTime.UtcNow;
+            this.CancelReason = cancelReason;
+        }
+
+        public void Reshedule()
+        {
+            if (this.Status == BookingStatus.Cancelled)
+                throw new InvalidOperationException("Cannot reschedule a cancelled booking.");
+            this.Status = BookingStatus.Pending;
+            this.UpdatedAt = DateTime.UtcNow;
         }
     }
 }

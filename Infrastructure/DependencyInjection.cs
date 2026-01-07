@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.IRepository;
+﻿using Domain.Interfaces.IRepository;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
