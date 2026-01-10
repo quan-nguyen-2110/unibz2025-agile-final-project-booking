@@ -1,3 +1,4 @@
+using Api.HostedServices;
 using Application.Bookings.Commands;
 using BookingService.Controllers;
 using Infrastructure;
@@ -7,8 +8,11 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Startup Initializer
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<StartupInitializer>();
 
+// Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     // Convert enums to strings in JSON request/response bodies
@@ -30,9 +34,10 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 //    cfg.RegisterServicesFromAssembly(as);
 //});
 
+// Dependency Application
 Application.DependencyInjection.AddApplication(builder.Services);
 
-// Infrastructure
+// Dependency Infrastructure
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.IMessaging;
+﻿using Application.Common.Interfaces.IMessaging;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using System;

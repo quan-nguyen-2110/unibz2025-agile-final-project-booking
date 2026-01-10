@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.IRepository;
+﻿using Application.Common.Interfaces;
+using Domain.Interfaces.IRepository;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
@@ -12,12 +13,17 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddDbContext<AppDbContext>(options =>
+            //services.AddDbContext<AppDbContext>(options =>
+            //    options.UseSqlServer(config.GetConnectionString("Default")));
+
+            services.AddDbContextFactory<AppDbContext>(options =>
                 options.UseSqlServer(config.GetConnectionString("Default")));
 
             services.AddScoped<IBookingRepository, BookingRepository>();
             services.AddScoped<IApartmentCacheRepository, ApartmentCacheRepository>();
             services.AddScoped<IUserCacheRepository, UserCacheRepository>();
+
+            services.AddSingleton<IDatabaseReadinessChecker, DatabaseChecker>();
 
             services.AddHostedService<RabbitMqConsumer>();
 
