@@ -56,27 +56,34 @@ namespace Api.HostedServices
 
         private async Task CallStartupApiAsync(CancellationToken ct)
         {
-            _logger.LogInformation("Checking ApartmentCache data ....");
-            if (!(await _dbChecker.IsApartmentCacheReadyAsync(ct)))
+            try
             {
-                _logger.LogInformation("Calling startup API...");
-                var client = _httpClientFactory.CreateClient();
-                var response = await client.GetAsync(_configuration["SyncApartmentsURL"], ct);
-
-                if (response.IsSuccessStatusCode)
+                _logger.LogInformation("Checking ApartmentCache data ....");
+                if (!(await _dbChecker.IsApartmentCacheReadyAsync(ct)))
                 {
-                    _logger.LogInformation("Startup API call succeeded");
-                    var content = await response.Content.ReadFromJsonAsync<List<ApartmentCache>>(ct);
-                    await _dbChecker.SynchronizedApartmentCachesAsync(content!, ct);
+                    _logger.LogInformation("Calling startup API...");
+                    var client = _httpClientFactory.CreateClient();
+                    var response = await client.GetAsync(_configuration["SyncApartmentsURL"], ct);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("Startup API call succeeded");
+                        var content = await response.Content.ReadFromJsonAsync<List<ApartmentCache>>(ct);
+                        await _dbChecker.SynchronizedApartmentCachesAsync(content!, ct);
+                    }
+                    else
+                    {
+                        _logger.LogError("Startup API failed: {StatusCode}", response.StatusCode);
+                    }
                 }
                 else
                 {
-                    _logger.LogError("Startup API failed: {StatusCode}", response.StatusCode);
+                    _logger.LogInformation("ApartmentCache has been synchronized already.");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogInformation("ApartmentCache has been synchronized already.");
+                _logger.LogError("Error during CallStartupApiAsync: {Message}", ex.Message);
             }
         }
     }
