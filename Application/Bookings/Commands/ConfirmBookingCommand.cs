@@ -40,6 +40,12 @@ namespace Application.Bookings.Commands
                             Id = request.Id,
                             Status = "Confirmed",
 
+                            ApartmentId = booking.ApartmentId,
+                            UserId = booking.UserId,
+                            Guest = booking.Guests,
+                            CancelReason = booking.CancelReason,
+                            CreatedAt = booking.CreatedAt,
+
                             UpdatedAt = DateTime.UtcNow
                         }),
                         _config["RabbitMQ:RK:UpdateBooking"] ?? "rk-update-bk");
