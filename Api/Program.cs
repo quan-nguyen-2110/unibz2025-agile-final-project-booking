@@ -1,10 +1,7 @@
 using Api.HostedServices;
-using Application.Bookings.Commands;
-using BookingService.Controllers;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

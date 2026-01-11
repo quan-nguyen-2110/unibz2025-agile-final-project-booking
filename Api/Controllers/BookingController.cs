@@ -62,5 +62,12 @@ namespace BookingService.Controllers
         {
             return Ok(await _mediator.Send(new GetAllBookingsQuery()));
         }
+
+        [HttpGet]
+        [Route("synchronized")]
+        public async Task<IActionResult> GetAllForSynchronization()
+        {
+            return Ok(await _mediator.Send(new GetAllBookingsForSynchronizationQuery()));
+        }
     }
 }
