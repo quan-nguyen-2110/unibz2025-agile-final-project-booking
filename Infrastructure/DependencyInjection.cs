@@ -1,4 +1,5 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces.IMessaging;
 using Domain.Interfaces.IRepository;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
@@ -24,6 +25,8 @@ namespace Infrastructure
             services.AddScoped<IUserCacheRepository, UserCacheRepository>();
 
             services.AddSingleton<IDatabaseReadinessChecker, DatabaseChecker>();
+
+            services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
 
             services.AddHostedService<RabbitMqConsumer>();
 
