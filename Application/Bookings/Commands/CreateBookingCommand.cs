@@ -1,11 +1,9 @@
-﻿using Domain.Interfaces.IRepository;
+﻿using Application.Common.Interfaces.IMessaging;
 using Domain.Entities;
+using Domain.Interfaces.IRepository;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace Application.Bookings.Commands
 {
@@ -20,10 +18,14 @@ namespace Application.Bookings.Commands
         public class CreateBookingHandler : IRequestHandler<CreateBookingCommand, Guid>
         {
             private readonly IBookingRepository _repo;
+            private readonly IMessagePublisher _publisher;
+            private readonly IConfiguration _config;
 
-            public CreateBookingHandler(IBookingRepository repo)
+            public CreateBookingHandler(IBookingRepository repo, IMessagePublisher publisher, IConfiguration config)
             {
                 _repo = repo;
+                _publisher = publisher;
+                _config = config;
             }
 
             public async Task<Guid> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
@@ -51,6 +53,30 @@ namespace Application.Bookings.Commands
                 };
 
                 await _repo.AddAsync(booking);
+
+                try
+                {
+                    await _publisher.PublishAsync(
+                        JsonSerializer.Serialize(new
+                        {
+                            Id = booking.Id,
+                            ApartmentId = request.ApartmentId,
+                            UserId = request.UserId,
+                            CheckIn = request.CheckIn,
+                            CheckOut = request.CheckOut,
+                            TotalPrice = request.TotalPrice,
+                            Guests = request.Guests,
+                            Status = "Pending",
+
+                            CreatedAt = DateTime.UtcNow
+                        }),
+                        _config["RabbitMQ:RK:CreateBooking"] ?? "rk-create-bk");
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception (logging mechanism not shown here)
+                    Console.WriteLine($"Failed to publish message: {ex.Message}");
+                }
                 return booking.Id;
             }
         }

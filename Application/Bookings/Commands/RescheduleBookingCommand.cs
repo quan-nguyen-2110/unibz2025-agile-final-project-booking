@@ -1,11 +1,8 @@
-﻿using Domain.Interfaces.IRepository;
-using Domain.Enums;
+﻿using Application.Common.Interfaces.IMessaging;
+using Domain.Interfaces.IRepository;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace Application.Bookings.Commands
 {
@@ -19,10 +16,14 @@ namespace Application.Bookings.Commands
         public class RescheduleBookingHandler : IRequestHandler<RescheduleBookingCommand, bool>
         {
             private readonly IBookingRepository _repo;
+            private readonly IMessagePublisher _publisher;
+            private readonly IConfiguration _config;
 
-            public RescheduleBookingHandler(IBookingRepository repo)
+            public RescheduleBookingHandler(IBookingRepository repo, IMessagePublisher publisher, IConfiguration config)
             {
                 _repo = repo;
+                _publisher = publisher;
+                _config = config;
             }
 
             public async Task<bool> Handle(RescheduleBookingCommand request, CancellationToken cancellationToken)
@@ -45,6 +46,28 @@ namespace Application.Bookings.Commands
                 booking.Reshedule();
 
                 await _repo.UpdateAsync(booking);
+
+                try
+                {
+                    await _publisher.PublishAsync(
+                        JsonSerializer.Serialize(new
+                        {
+                            Id = request.Id,
+                            Status = "Pending",
+                            CheckIn = request.CheckIn,
+                            CheckOut = request.CheckOut,
+                            TotalPrice = request.TotalPrice,
+
+                            UpdatedAt = DateTime.UtcNow
+                        }),
+                        _config["RabbitMQ:RK:UpdateBooking"] ?? "rk-update-bk");
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception (logging mechanism not shown here)
+                    Console.WriteLine($"Failed to publish message: {ex.Message}");
+                }
+
                 return true;
             }
         }
