@@ -69,5 +69,11 @@ namespace BookingService.Controllers
         {
             return Ok(await _mediator.Send(new GetAllBookingsForSynchronizationQuery()));
         }
+
+        [HttpGet("confirmation-message/{id}")]
+        public async Task<IActionResult> GetConfirmationMessage(Guid id)
+        {
+            return Ok(await _mediator.Send(new GetConfirmationByBookingIdQuery { Id = id }));
+        }
     }
 }
