@@ -43,5 +43,8 @@ namespace Infrastructure.Repositories
                 await _db.SaveChangesAsync();
             }
         }
+        public async Task<ApartmentCache?> GetByIdAsync(Guid id, CancellationToken ct = default)
+           => await _db.ApartmentCaches.FindAsync(new object[] { id }, ct);
+
     }
 }

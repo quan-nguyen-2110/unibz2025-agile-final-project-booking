@@ -58,5 +58,33 @@ namespace Infrastructure.Persistence
                 _logger.LogWarning("Database not ready yet: {Message}", ex.Message);
             }
         }
+
+        public async Task<bool> IsUserCacheReadyAsync(CancellationToken ct)
+        {
+            try
+            {
+                await using var context = await _contextFactory.CreateDbContextAsync(ct);
+                return await context.UserCaches.AnyAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Database not ready yet: {Message}", ex.Message);
+                return false;
+            }
+        }
+
+        public async Task SynchronizedUserCachesAsync(List<UserCache> users, CancellationToken ct)
+        {
+            try
+            {
+                await using var context = await _contextFactory.CreateDbContextAsync(ct);
+                await context.UserCaches.AddRangeAsync(users, ct);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Database not ready yet: {Message}", ex.Message);
+            }
+        }
     }
 }

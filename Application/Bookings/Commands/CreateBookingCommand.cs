@@ -3,6 +3,8 @@ using Domain.Entities;
 using Domain.Interfaces.IRepository;
 using MediatR;
 using Microsoft.Extensions.Configuration;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 namespace Application.Bookings.Commands
@@ -18,12 +20,21 @@ namespace Application.Bookings.Commands
         public class CreateBookingHandler : IRequestHandler<CreateBookingCommand, Guid>
         {
             private readonly IBookingRepository _repo;
+            private readonly IUserCacheRepository _userRepo;
+            private readonly IApartmentCacheRepository _aptRepo;
             private readonly IMessagePublisher _publisher;
             private readonly IConfiguration _config;
 
-            public CreateBookingHandler(IBookingRepository repo, IMessagePublisher publisher, IConfiguration config)
+            public CreateBookingHandler(
+                IBookingRepository repo,
+                IUserCacheRepository userRepo,
+                IApartmentCacheRepository aptRepo,
+                IMessagePublisher publisher,
+                IConfiguration config)
             {
                 _repo = repo;
+                _userRepo = userRepo;
+                _aptRepo = aptRepo;
                 _publisher = publisher;
                 _config = config;
             }
@@ -53,6 +64,60 @@ namespace Application.Bookings.Commands
                 };
 
                 await _repo.AddAsync(booking);
+
+                // LLM generate confirmation message
+                try
+                {
+                    var url = "http://10.12.203.1:8080/v1/chat/completions";
+
+                    using var httpClient = new HttpClient
+                    {
+                        Timeout = TimeSpan.FromSeconds(60)
+                    };
+
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "aab1db4e-4c24-4bcb-9e91-de464cc35df2");
+                    var user = await _userRepo.GetByIdAsync(request.UserId);
+                    var apt = await _aptRepo.GetByIdAsync(request.ApartmentId);
+                    // Prompt for AI
+                    string prompt = $@"
+                        Generate a friendly apartment reservation confirmation message for a guest.
+                        Include guest name, apartment name, check-in/out dates, and total price.
+                        Reservation details:
+                        - Guest: {user?.Name}
+                        - Apartment: {apt?.Title}
+                        - Check-in: {request.CheckIn:MMMM dd, yyyy}
+                        - Check-out: {request.CheckOut:MMMM dd, yyyy}
+                        - Total price: ${request.TotalPrice:F2}
+
+                        The message should be polite and professional.";
+
+                    var requestBody = new
+                    {
+                        model = "llama3:latest",
+                        // temperature = 0.2,
+                        messages = new[]
+                        {
+                            new
+                            {
+                                role = "user",
+                                content = prompt
+                            }
+                        }
+                    };
+
+                    var json = JsonSerializer.Serialize(requestBody);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = await httpClient.PostAsync(url, content);
+
+                    Console.WriteLine($"Status: {(int)response.StatusCode}");
+                    Console.WriteLine("Response:");
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception (logging mechanism not shown here)
+                    Console.WriteLine($"Failed to generate confirmation message: {ex.Message}");
+                }
 
                 try
                 {

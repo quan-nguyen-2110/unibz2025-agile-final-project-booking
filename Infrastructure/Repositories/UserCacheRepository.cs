@@ -43,5 +43,8 @@ namespace Infrastructure.Repositories
                 await _db.SaveChangesAsync();
             }
         }
+
+        public async Task<UserCache?> GetByIdAsync(Guid id, CancellationToken ct = default)
+            => await _db.UserCaches.FindAsync(new object[] { id }, ct);
     }
 }

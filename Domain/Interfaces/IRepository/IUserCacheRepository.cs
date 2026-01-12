@@ -8,5 +8,6 @@ namespace Domain.Interfaces.IRepository
         Task<int> UpdateAsync(UserCache user, CancellationToken ct = default);
         Task<bool> IsExistingAsync(Guid id, CancellationToken ct = default);
         Task DeleteAsync(Guid id);
+        Task<UserCache?> GetByIdAsync(Guid id, CancellationToken ct = default);
     }
 }

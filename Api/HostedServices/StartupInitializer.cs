@@ -51,29 +51,31 @@ namespace Api.HostedServices
             }
 
             // 👉 Call external API AFTER DB is ready
-            await CallStartupApiAsync(stoppingToken);
+            Task aptTask = SyncApartmentsAsync(stoppingToken);
+            Task userTask = SyncUserAsync(stoppingToken);
+            Task.WhenAll(aptTask, userTask).Wait(stoppingToken);
         }
 
-        private async Task CallStartupApiAsync(CancellationToken ct)
+        private async Task SyncApartmentsAsync(CancellationToken ct)
         {
             try
             {
                 _logger.LogInformation("Checking ApartmentCache data ....");
                 if (!(await _dbChecker.IsApartmentCacheReadyAsync(ct)))
                 {
-                    _logger.LogInformation("Calling startup API...");
+                    _logger.LogInformation("Calling SyncApartmentsAsync API ...");
                     var client = _httpClientFactory.CreateClient();
                     var response = await client.GetAsync(_configuration["SyncApartmentsURL"], ct);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        _logger.LogInformation("Startup API call succeeded");
+                        _logger.LogInformation("Startup API SyncApartmentsAsync call succeeded");
                         var content = await response.Content.ReadFromJsonAsync<List<ApartmentCache>>(ct);
                         await _dbChecker.SynchronizedApartmentCachesAsync(content!, ct);
                     }
                     else
                     {
-                        _logger.LogError("Startup API failed: {StatusCode}", response.StatusCode);
+                        _logger.LogError("Startup API SyncApartmentsAsync failed: {StatusCode}", response.StatusCode);
                     }
                 }
                 else
@@ -83,7 +85,40 @@ namespace Api.HostedServices
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error during CallStartupApiAsync: {Message}", ex.Message);
+                _logger.LogError("Error during SyncApartmentsAsync API: {Message}", ex.Message);
+            }
+        }
+
+        private async Task SyncUserAsync(CancellationToken ct)
+        {
+            try
+            {
+                _logger.LogInformation("Checking UserCache data ....");
+                if (!(await _dbChecker.IsUserCacheReadyAsync(ct)))
+                {
+                    _logger.LogInformation("Calling startup API SyncUserAsync...");
+                    var client = _httpClientFactory.CreateClient();
+                    var response = await client.GetAsync(_configuration["SyncUsersURL"], ct);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("Startup API SyncUserAsync call succeeded");
+                        var content = await response.Content.ReadFromJsonAsync<List<UserCache>>(ct);
+                        await _dbChecker.SynchronizedUserCachesAsync(content!, ct);
+                    }
+                    else
+                    {
+                        _logger.LogError("Startup API SyncUserAsync failed: {StatusCode}", response.StatusCode);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("UserCache has been synchronized already.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error during API SyncUserAsync: {Message}", ex.Message);
             }
         }
     }

@@ -12,5 +12,7 @@ namespace Application.Common.Interfaces
         Task<bool> IsDatabaseReadyAsync(CancellationToken ct);
         Task<bool> IsApartmentCacheReadyAsync(CancellationToken ct);
         Task SynchronizedApartmentCachesAsync(List<ApartmentCache> apts, CancellationToken ct);
+        Task<bool> IsUserCacheReadyAsync(CancellationToken ct);
+        Task SynchronizedUserCachesAsync(List<UserCache> users, CancellationToken ct);
     }
 }
